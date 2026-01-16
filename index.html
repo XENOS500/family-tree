@@ -42,6 +42,22 @@ header h1 {
     letter-spacing: 1px;
 }
 
+.sync-status {
+    text-align: center;
+    color: white;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.sync-status.synced {
+    color: #43e97b;
+}
+
+.sync-status.syncing {
+    color: #ffecd2;
+}
+
 .controls {
     display: flex;
     justify-content: center;
@@ -105,6 +121,24 @@ header h1 {
     min-height: 500px;
 }
 
+.save-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: rgba(67, 233, 123, 0.9);
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2000;
+}
+
+.save-indicator.show {
+    opacity: 1;
+}
+
 .tree {
     display: inline-block;
     padding: 20px;
@@ -135,7 +169,6 @@ header h1 {
     position: relative;
 }
 
-/* Remove all card styling - just image and name */
 .node {
     display: flex;
     flex-direction: column;
@@ -158,19 +191,16 @@ header h1 {
     border: none;
 }
 
-/* Male gets blue glow */
 .node.male .node-image,
 .node.male .placeholder-icon {
     box-shadow: 0 0 15px rgba(74, 144, 226, 0.7), 0 0 30px rgba(74, 144, 226, 0.4);
 }
 
-/* Female gets pink glow */
 .node.female .node-image,
 .node.female .placeholder-icon {
     box-shadow: 0 0 15px rgba(255, 105, 180, 0.7), 0 0 30px rgba(255, 105, 180, 0.4);
 }
 
-/* Empty nodes have subtle glow */
 .node.empty .node-image,
 .node.empty .placeholder-icon {
     box-shadow: 0 0 8px rgba(150, 150, 150, 0.3);
@@ -216,7 +246,6 @@ header h1 {
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Connection lines - Fixed positioning */
 .vertical-line {
     position: absolute;
     width: 2px;
@@ -226,19 +255,16 @@ header h1 {
     z-index: 1;
 }
 
-/* Line from parent to this node */
 .vertical-line-top {
     bottom: calc(100% + 5px);
     height: 40px;
 }
 
-/* Line from this node to children */
 .vertical-line-bottom {
     top: calc(100% + 5px);
     height: 40px;
 }
 
-/* Horizontal line connecting siblings */
 .horizontal-connector {
     position: absolute;
     height: 2px;
@@ -276,7 +302,6 @@ header h1 {
     display: none !important;
 }
 
-/* Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -409,7 +434,6 @@ header h1 {
     min-width: 100px;
 }
 
-/* Gender Selection Styles */
 .gender-options {
     display: flex;
     gap: 15px;
@@ -471,7 +495,6 @@ header h1 {
     margin-top: 20px;
 }
 
-/* Mobile responsive */
 @media (max-width: 768px) {
     header h1 {
         font-size: 2em;
@@ -529,10 +552,13 @@ header h1 {
     </style>
 </head>
 <body>
+    <div class="save-indicator" id="saveIndicator">✓ Synced to Cloud</div>
+    
     <div class="container">
         <header>
             <h1>Paternal Family Tree</h1>
             <p class="subtitle">Trace Your Father's Lineage</p>
+            <div class="sync-status" id="syncStatus">🔄 Connecting to cloud...</div>
         </header>
 
         <div class="controls">
@@ -546,7 +572,7 @@ header h1 {
         </div>
     </div>
 
-    <!-- Modal for editing node -->
+    <!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -620,6 +646,42 @@ header h1 {
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // TODO: Replace with your Firebase config
+        // Get this from Firebase Console > Project Settings > Your apps > SDK setup and configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyAD-oAt1sp1-z1CyaLkjnx98kxToGX5yOc",
+  authDomain: "family-tree-53117.firebaseapp.com",
+  databaseURL: "https://family-tree-53117-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "family-tree-53117",
+  storageBucket: "family-tree-53117.firebasestorage.app",
+  messagingSenderId: "344307172282",
+  appId: "1:344307172282:web:34686e24f9a633bfb19383"
+};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const treeRef = ref(database, 'familyTree');
+
+        // Make database globally accessible
+        window.firebaseDb = database;
+        window.treeRef = treeRef;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        
+        // Signal that Firebase is ready
+        window.firebaseReady = true;
+        if (window.initializeApp) {
+            window.initializeApp();
+        }
+    </script>
+
     <script>
 // Family Tree Data Structure
 let familyTree = {
@@ -638,6 +700,7 @@ let familyTree = {
 
 let currentEditNode = null;
 let nodeIdCounter = 1;
+let isLocalUpdate = false;
 
 // DOM Elements
 const modal = document.getElementById('editModal');
@@ -657,9 +720,19 @@ const addChildBtn = document.getElementById('addChildBtn');
 const resetBtn = document.getElementById('resetBtn');
 const expandAllBtn = document.getElementById('expandAllBtn');
 const collapseAllBtn = document.getElementById('collapseAllBtn');
+const saveIndicator = document.getElementById('saveIndicator');
+const syncStatus = document.getElementById('syncStatus');
 
-// Initialize
-renderTree();
+// Initialize when Firebase is ready
+window.initializeApp = function() {
+    loadTreeFromFirebase();
+    setupRealtimeListener();
+};
+
+// If Firebase is already loaded, initialize now
+if (window.firebaseReady) {
+    window.initializeApp();
+}
 
 // Event Listeners
 closeBtn.onclick = () => modal.style.display = 'none';
@@ -682,37 +755,93 @@ collapseAllBtn.onclick = () => expandCollapseAll(false);
 memberImageInput.onchange = (e) => handleImagePreview(e, imagePreview);
 partnerImageInput.onchange = (e) => handleImagePreview(e, partnerImagePreview);
 
-// Functions
+// Firebase Functions
+async function saveTreeToFirebase() {
+    try {
+        isLocalUpdate = true;
+        await window.firebaseSet(window.treeRef, familyTree);
+        showSaveIndicator();
+        updateSyncStatus('synced');
+        setTimeout(() => { isLocalUpdate = false; }, 500);
+    } catch (error) {
+        console.error('Error saving to Firebase:', error);
+        updateSyncStatus('error');
+        alert('Error syncing to cloud. Please check your internet connection.');
+    }
+}
+
+async function loadTreeFromFirebase() {
+    try {
+        const snapshot = await window.firebaseGet(window.treeRef);
+        if (snapshot.exists()) {
+            familyTree = snapshot.val();
+            renderTree();
+            updateSyncStatus('synced');
+        } else {
+            // No data exists, save initial tree
+            await saveTreeToFirebase();
+        }
+    } catch (error) {
+        console.error('Error loading from Firebase:', error);
+        updateSyncStatus('error');
+    }
+}
+
+function setupRealtimeListener() {
+    window.firebaseOnValue(window.treeRef, (snapshot) => {
+        if (!isLocalUpdate && snapshot.exists()) {
+            familyTree = snapshot.val();
+            renderTree();
+            updateSyncStatus('synced');
+        }
+    });
+}
+
+function updateSyncStatus(status) {
+    const statusEl = document.getElementById('syncStatus');
+    if (status === 'synced') {
+        statusEl.textContent = '✓ Synced with all devices';
+        statusEl.className = 'sync-status synced';
+    } else if (status === 'syncing') {
+        statusEl.textContent = '🔄 Syncing...';
+        statusEl.className = 'sync-status syncing';
+    } else if (status === 'error') {
+        statusEl.textContent = '⚠ Sync error - check connection';
+        statusEl.className = 'sync-status';
+    }
+}
+
+function showSaveIndicator() {
+    saveIndicator.classList.add('show');
+    setTimeout(() => {
+        saveIndicator.classList.remove('show');
+    }, 2000);
+}
+
+// Render Functions
 function renderTree() {
     const treeElement = document.getElementById('tree');
     treeElement.innerHTML = '';
-    
-    // Render tree recursively from root
     renderNode(familyTree, treeElement, 0);
 }
 
 function renderNode(node, parentElement, level) {
-    // Create family unit container
     const familyUnit = document.createElement('div');
     familyUnit.className = 'family-unit';
     familyUnit.style.position = 'relative';
     
-    // Add vertical line to parent (for non-root nodes)
     if (level > 0) {
         const verticalLineTop = document.createElement('div');
         verticalLineTop.className = 'vertical-line vertical-line-top';
         familyUnit.appendChild(verticalLineTop);
     }
     
-    // Create couple container (main person + partner)
     const coupleContainer = document.createElement('div');
     coupleContainer.className = 'couple-container';
     
-    // Main person node
     const mainNode = createPersonNode(node, false);
     coupleContainer.appendChild(mainNode);
     
-    // Partner (only if hasPartner is true)
     if (node.hasPartner) {
         const connector = document.createElement('div');
         connector.className = 'connector';
@@ -724,14 +853,11 @@ function renderNode(node, parentElement, level) {
     
     familyUnit.appendChild(coupleContainer);
     
-    // Handle children
     if (node.children && node.children.length > 0) {
-        // Add vertical line to children
         const verticalLineBottom = document.createElement('div');
         verticalLineBottom.className = 'vertical-line vertical-line-bottom';
         familyUnit.appendChild(verticalLineBottom);
         
-        // Expand/Collapse button
         const expandBtn = document.createElement('button');
         expandBtn.className = 'expand-btn';
         expandBtn.textContent = node.expanded ? '−' : '+';
@@ -741,7 +867,6 @@ function renderNode(node, parentElement, level) {
         };
         familyUnit.appendChild(expandBtn);
         
-        // Children container
         if (node.expanded) {
             const childrenGeneration = document.createElement('div');
             childrenGeneration.className = 'generation';
@@ -752,7 +877,6 @@ function renderNode(node, parentElement, level) {
             
             familyUnit.appendChild(childrenGeneration);
             
-            // Add horizontal connector for siblings
             if (node.children.length > 1) {
                 setTimeout(() => {
                     addHorizontalConnector(childrenGeneration);
@@ -794,7 +918,6 @@ function createPersonNode(node, isPartner) {
     const nodeDiv = document.createElement('div');
     nodeDiv.className = 'node';
     
-    // Determine if empty and add gender class
     if (isPartner) {
         if (!node.partner) {
             nodeDiv.classList.add('empty');
@@ -811,7 +934,6 @@ function createPersonNode(node, isPartner) {
         }
     }
     
-    // Image or placeholder
     const imageSource = isPartner ? node.partnerImage : node.image;
     const genderValue = isPartner ? node.partnerGender : node.gender;
     
@@ -827,7 +949,6 @@ function createPersonNode(node, isPartner) {
         nodeDiv.appendChild(placeholder);
     }
     
-    // Name
     const name = document.createElement('div');
     name.className = 'node-name';
     if (isPartner) {
@@ -847,7 +968,6 @@ function openEditModal(node) {
     memberNameInput.value = node.name || '';
     partnerNameInput.value = node.partner || '';
     
-    // Set gender radio buttons
     const memberGenderRadios = document.querySelectorAll('input[name="memberGender"]');
     memberGenderRadios.forEach(radio => {
         radio.checked = radio.value === node.gender;
@@ -858,14 +978,12 @@ function openEditModal(node) {
         radio.checked = radio.value === node.partnerGender;
     });
     
-    // Set partner checkbox and show/hide partner section
     hasPartnerCheckbox.checked = node.hasPartner || false;
     partnerSection.classList.toggle('hidden', !hasPartnerCheckbox.checked);
     
     imagePreview.innerHTML = node.image ? `<img src="${node.image}">` : '';
     partnerImagePreview.innerHTML = node.partnerImage ? `<img src="${node.partnerImage}">` : '';
     
-    // Show/hide delete button
     deleteBtn.style.display = node === familyTree ? 'none' : 'block';
     
     modal.style.display = 'block';
@@ -877,7 +995,6 @@ function saveNode() {
     const name = memberNameInput.value.trim();
     const partner = partnerNameInput.value.trim();
     
-    // Get selected genders
     const memberGender = document.querySelector('input[name="memberGender"]:checked');
     const partnerGender = document.querySelector('input[name="partnerGender"]:checked');
     
@@ -890,7 +1007,6 @@ function saveNode() {
         currentEditNode.gender = memberGender.value;
     }
     
-    // Handle partner
     currentEditNode.hasPartner = hasPartnerCheckbox.checked;
     
     if (hasPartnerCheckbox.checked) {
@@ -901,13 +1017,14 @@ function saveNode() {
             currentEditNode.partnerGender = partnerGender.value;
         }
     } else {
-        // Clear partner data if unchecked
         currentEditNode.partner = null;
         currentEditNode.partnerGender = null;
         currentEditNode.partnerImage = null;
     }
     
     modal.style.display = 'none';
+    updateSyncStatus('syncing');
+    saveTreeToFirebase();
     renderTree();
 }
 
@@ -915,10 +1032,10 @@ function deleteNode() {
     if (!currentEditNode || currentEditNode === familyTree) return;
     
     if (confirm('Are you sure you want to delete this family member and all descendants?')) {
-        // Find and remove from parent
         removeNodeFromTree(familyTree, currentEditNode);
-        
         modal.style.display = 'none';
+        updateSyncStatus('syncing');
+        saveTreeToFirebase();
         renderTree();
     }
 }
@@ -942,7 +1059,6 @@ function removeNodeFromTree(parent, nodeToRemove) {
 function addParent() {
     if (!currentEditNode) return;
     
-    // Create new parent
     const newParent = {
         id: 'node_' + nodeIdCounter++,
         name: '',
@@ -957,7 +1073,6 @@ function addParent() {
         isEmpty: true
     };
     
-    // Replace current node with parent in tree
     if (currentEditNode === familyTree) {
         familyTree = newParent;
     } else {
@@ -965,6 +1080,8 @@ function addParent() {
     }
     
     modal.style.display = 'none';
+    updateSyncStatus('syncing');
+    saveTreeToFirebase();
     renderTree();
 }
 
@@ -1009,16 +1126,22 @@ function addChild() {
     currentEditNode.expanded = true;
     
     modal.style.display = 'none';
+    updateSyncStatus('syncing');
+    saveTreeToFirebase();
     renderTree();
 }
 
 function toggleExpand(node) {
     node.expanded = !node.expanded;
+    updateSyncStatus('syncing');
+    saveTreeToFirebase();
     renderTree();
 }
 
 function expandCollapseAll(expand) {
     setExpandedRecursive(familyTree, expand);
+    updateSyncStatus('syncing');
+    saveTreeToFirebase();
     renderTree();
 }
 
@@ -1030,7 +1153,7 @@ function setExpandedRecursive(node, expanded) {
 }
 
 function resetTree() {
-    if (confirm('Are you sure you want to reset the entire family tree?')) {
+    if (confirm('Are you sure you want to reset the entire family tree? This will affect all users and devices!')) {
         familyTree = {
             id: 'root',
             name: 'Click to Add',
@@ -1045,6 +1168,8 @@ function resetTree() {
             isEmpty: true
         };
         nodeIdCounter = 1;
+        updateSyncStatus('syncing');
+        saveTreeToFirebase();
         renderTree();
     }
 }
@@ -1056,7 +1181,6 @@ function handleImagePreview(event, previewElement) {
         reader.onload = (e) => {
             previewElement.innerHTML = `<img src="${e.target.result}">`;
             
-            // Save to current node
             if (event.target === memberImageInput && currentEditNode) {
                 currentEditNode.image = e.target.result;
             } else if (event.target === partnerImageInput && currentEditNode) {

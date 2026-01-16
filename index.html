@@ -253,11 +253,12 @@ header h1 {
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
+    border-radius: 2px; 
 }
 
 .vertical-line-top {
     bottom: calc(100% + 5px);
-    height: 40px;
+    height: 45px;
 }
 
 .vertical-line-bottom {
@@ -269,7 +270,7 @@ header h1 {
     position: absolute;
     height: 2px;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    top: -40px;
+    top: -45px;
     z-index: 0;
 }
 
@@ -875,10 +876,10 @@ function renderNode(node, parentElement, level) {
             familyUnit.appendChild(childrenGeneration);
             
             if (node.children.length > 1) {
-                setTimeout(() => {
-                    addHorizontalConnector(childrenGeneration);
-                }, 10);
-            }
+    requestAnimationFrame(() => {
+        addHorizontalConnector(childrenGeneration);
+    });
+}
         }
     }
     
@@ -895,10 +896,17 @@ function addHorizontalConnector(generationDiv) {
     const firstUnit = familyUnits[0];
     const lastUnit = familyUnits[familyUnits.length - 1];
     
-    const parentRect = generationDiv.getBoundingClientRect();
-    const firstRect = firstUnit.getBoundingClientRect();
-    const lastRect = lastUnit.getBoundingClientRect();
+    // Get the couple-container (where the actual nodes are) instead of family-unit
+    const firstCouple = firstUnit.querySelector('.couple-container');
+    const lastCouple = lastUnit.querySelector('.couple-container');
     
+    if (!firstCouple || !lastCouple) return;
+    
+    const parentRect = generationDiv.getBoundingClientRect();
+    const firstRect = firstCouple.getBoundingClientRect();
+    const lastRect = lastCouple.getBoundingClientRect();
+    
+    // Calculate center of each couple-container
     const leftPos = firstRect.left - parentRect.left + (firstRect.width / 2);
     const rightPos = lastRect.left - parentRect.left + (lastRect.width / 2);
     const width = rightPos - leftPos;

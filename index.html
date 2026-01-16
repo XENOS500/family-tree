@@ -562,7 +562,6 @@ header h1 {
         </header>
 
         <div class="controls">
-            <button id="resetBtn" class="btn btn-reset">Reset Tree</button>
             <button id="expandAllBtn" class="btn btn-expand">Expand All</button>
             <button id="collapseAllBtn" class="btn btn-collapse">Collapse All</button>
         </div>
@@ -717,7 +716,6 @@ const saveBtn = document.getElementById('saveBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const addParentBtn = document.getElementById('addParentBtn');
 const addChildBtn = document.getElementById('addChildBtn');
-const resetBtn = document.getElementById('resetBtn');
 const expandAllBtn = document.getElementById('expandAllBtn');
 const collapseAllBtn = document.getElementById('collapseAllBtn');
 const saveIndicator = document.getElementById('saveIndicator');
@@ -748,7 +746,6 @@ saveBtn.onclick = saveNode;
 deleteBtn.onclick = deleteNode;
 addParentBtn.onclick = addParent;
 addChildBtn.onclick = addChild;
-resetBtn.onclick = resetTree;
 expandAllBtn.onclick = () => expandCollapseAll(true);
 collapseAllBtn.onclick = () => expandCollapseAll(false);
 
@@ -1152,27 +1149,7 @@ function setExpandedRecursive(node, expanded) {
     }
 }
 
-function resetTree() {
-    if (confirm('Are you sure you want to reset the entire family tree? This will affect all users and devices!')) {
-        familyTree = {
-            id: 'root',
-            name: 'Click to Add',
-            gender: null,
-            image: null,
-            partner: null,
-            partnerGender: null,
-            partnerImage: null,
-            hasPartner: false,
-            children: [],
-            expanded: true,
-            isEmpty: true
-        };
-        nodeIdCounter = 1;
-        updateSyncStatus('syncing');
-        saveTreeToFirebase();
-        renderTree();
-    }
-}
+
 
 function handleImagePreview(event, previewElement) {
     const file = event.target.files[0];

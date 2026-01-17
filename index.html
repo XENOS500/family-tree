@@ -139,6 +139,23 @@ header h1 {
     opacity: 1;
 }
 
+.edit-mode-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: rgba(67, 233, 123, 0.9);
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    z-index: 2000;
+    display: none;
+}
+
+.edit-mode-indicator.active {
+    display: block;
+}
+
 .tree {
     display: inline-block;
     padding: 20px;
@@ -554,6 +571,7 @@ header h1 {
 </head>
 <body>
     <div class="save-indicator" id="saveIndicator">✓ Synced to Cloud</div>
+<div class="edit-mode-indicator" id="editModeIndicator">🔓 Edit Mode Active</div>
     
     <div class="container">
         <header>
@@ -702,6 +720,8 @@ let currentEditNode = null;
 let nodeIdCounter = 1;
 let isLocalUpdate = false;
 let saveTimeout = null; 
+const EDIT_PASSWORD = "Pareek2024";  // ADD THIS - Change to your password
+let isEditMode = false;
 
 // DOM Elements
 const modal = document.getElementById('editModal');
@@ -748,8 +768,16 @@ saveBtn.onclick = saveNode;
 deleteBtn.onclick = deleteNode;
 addParentBtn.onclick = addParent;
 addChildBtn.onclick = addChild;
-expandAllBtn.onclick = () => expandCollapseAll(true);
-collapseAllBtn.onclick = () => expandCollapseAll(false);
+expandAllBtn.onclick = () => {
+    if (checkEditPassword()) {
+        expandCollapseAll(true);
+    }
+};
+collapseAllBtn.onclick = () => {
+    if (checkEditPassword()) {
+        expandCollapseAll(false);
+    }
+};
 
 memberImageInput.onchange = (e) => handleImagePreview(e, imagePreview);
 partnerImageInput.onchange = (e) => handleImagePreview(e, partnerImagePreview);
@@ -824,7 +852,22 @@ function showSaveIndicator() {
         saveIndicator.classList.remove('show');
     }, 2000);
 }
-
+function checkEditPassword() {
+    if (isEditMode) return true;
+    
+    const password = prompt("Enter password to edit the family tree:");
+    
+    if (password === EDIT_PASSWORD) {
+        isEditMode = true;
+        const indicator = document.getElementById('editModeIndicator');
+        if (indicator) indicator.classList.add('active');
+        alert("Edit mode enabled! You can now make changes.");
+        return true;
+    } else if (password !== null) {
+        alert("Incorrect password. You can only view the tree.");
+    }
+    return false;
+}
 // Render Functions
 function renderTree() {
     const treeElement = document.getElementById('tree');
@@ -978,6 +1021,11 @@ function createPersonNode(node, isPartner) {
 }
 
 function openEditModal(node) {
+    // Check password before allowing edit
+    if (!checkEditPassword()) {
+        return; // Don't open modal if password is wrong
+    }
+    
     currentEditNode = node;
     memberNameInput.value = node.name || '';
     partnerNameInput.value = node.partner || '';

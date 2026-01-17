@@ -701,6 +701,7 @@ let familyTree = {
 let currentEditNode = null;
 let nodeIdCounter = 1;
 let isLocalUpdate = false;
+let saveTimeout = null; 
 
 // DOM Elements
 const modal = document.getElementById('editModal');
@@ -755,17 +756,25 @@ partnerImageInput.onchange = (e) => handleImagePreview(e, partnerImagePreview);
 
 // Firebase Functions
 async function saveTreeToFirebase() {
-    try {
-        isLocalUpdate = true;
-        await window.firebaseSet(window.treeRef, familyTree);
-        showSaveIndicator();
-        updateSyncStatus('synced');
-        setTimeout(() => { isLocalUpdate = false; }, 500);
-    } catch (error) {
-        console.error('Error saving to Firebase:', error);
-        updateSyncStatus('error');
-        alert('Error syncing to cloud. Please check your internet connection.');
+    // Clear any pending save
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
     }
+    
+    // Wait 500ms before saving (debounce)
+    saveTimeout = setTimeout(async () => {
+        try {
+            isLocalUpdate = true;
+            await window.firebaseSet(window.treeRef, familyTree);
+            showSaveIndicator();
+            updateSyncStatus('synced');
+            setTimeout(() => { isLocalUpdate = false; }, 500);
+        } catch (error) {
+            console.error('Error saving to Firebase:', error);
+            updateSyncStatus('error');
+            alert('Error syncing to cloud. Please check your internet connection.');
+        }
+    }, 500);
 }
 
 async function loadTreeFromFirebase() {
@@ -1164,13 +1173,46 @@ function handleImagePreview(event, previewElement) {
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            previewElement.innerHTML = `<img src="${e.target.result}">`;
-            
-            if (event.target === memberImageInput && currentEditNode) {
-                currentEditNode.image = e.target.result;
-            } else if (event.target === partnerImageInput && currentEditNode) {
-                currentEditNode.partnerImage = e.target.result;
-            }
+            // Create image element to compress
+            const img = new Image();
+            img.onload = () => {
+                // Create canvas to resize
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Resize to max 200x200 (perfect for small nodes)
+                const maxSize = 200;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > height) {
+                    if (width > maxSize) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Compress to 70% quality
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                
+                previewElement.innerHTML = `<img src="${compressedDataUrl}">`;
+                
+                if (event.target === memberImageInput && currentEditNode) {
+                    currentEditNode.image = compressedDataUrl;
+                } else if (event.target === partnerImageInput && currentEditNode) {
+                    currentEditNode.partnerImage = compressedDataUrl;
+                }
+            };
+            img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     }

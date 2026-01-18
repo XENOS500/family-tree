@@ -577,7 +577,7 @@ header h1 {
     <div class="container">
         <header>
             <h1>Pareek Family Tree</h1>
-            <p class="subtitle">Tracing the roots of family-by Ayush Hemant Pareek</p>
+            <p class="subtitle">Tracing the roots of family-        by Ayush Hemant Pareek</p>
             <div class="sync-status" id="syncStatus">🔄 Connecting to cloud...</div>
         </header>
 
@@ -882,10 +882,16 @@ function renderNode(node, parentElement, level) {
     familyUnit.style.position = 'relative';
     
     if (level > 0) {
-        const verticalLineTop = document.createElement('div');
-        verticalLineTop.className = 'vertical-line vertical-line-top';
-        familyUnit.appendChild(verticalLineTop);
+    const verticalLineTop = document.createElement('div');
+    verticalLineTop.className = 'vertical-line vertical-line-top';
+    
+    // If this node has a partner, shift line to connect to main person only (not couple center)
+    if (node.hasPartner) {
+        verticalLineTop.style.left = 'calc(50% - 31px)'; // Connect to child, not couple center
     }
+    
+    familyUnit.appendChild(verticalLineTop);
+}
     
     const coupleContainer = document.createElement('div');
     coupleContainer.className = 'couple-container';

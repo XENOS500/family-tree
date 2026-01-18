@@ -118,6 +118,7 @@ header h1 {
     padding: 40px 20px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     overflow-x: auto;
+    overflow-y: visible;
     min-height: 500px;
 }
 
@@ -157,10 +158,10 @@ header h1 {
 }
 
 .tree {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: inline-block;
     padding: 20px;
+    padding-left: 100px;  /* ADD THIS - gives space on left */
+    padding-right: 100px; /* ADD THIS - gives space on right */
     min-width: 100%;
 }
 

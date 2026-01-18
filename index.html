@@ -622,7 +622,9 @@ header h1 {
         <div class="controls">
             <button id="expandAllBtn" class="btn btn-expand">Expand All</button>
             <button id="collapseAllBtn" class="btn btn-collapse">Collapse All</button>
-        </div>
+            <button id="englishBtn" class="btn btn-save">English</button>
+            <button id="hindiBtn" class="btn btn-add">हिंदी</button>
+         </div>
 
         <div id="treeContainer" class="tree-container">
             <div id="tree" class="tree"></div>
@@ -636,8 +638,13 @@ header h1 {
             <h2>Edit Family Member</h2>
             
             <div class="form-group">
-                <label for="memberName">Name:</label>
-                <input type="text" id="memberName" placeholder="Enter name">
+                <label for="memberName">Name (English):</label>
+                <input type="text" id="memberName" placeholder="Enter name in English">
+            </div>
+
+            <div class="form-group">
+                <label for="memberNameHindi">Name (हिंदी):</label>
+                <input type="text" id="memberNameHindi" placeholder="हिंदी में नाम दर्ज करें">
             </div>
 
             <div class="form-group">
@@ -668,10 +675,15 @@ header h1 {
             </div>
 
             <div id="partnerSection" class="partner-section hidden">
-                <div class="form-group">
-                    <label for="partnerName">Partner Name:</label>
-                    <input type="text" id="partnerName" placeholder="Enter partner's name">
-                </div>
+                    <div class="form-group">
+                        <label for="partnerName">Partner Name (English):</label>
+                        <input type="text" id="partnerName" placeholder="Enter partner's name in English">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="partnerNameHindi">Partner Name (हिंदी):</label>
+                        <input type="text" id="partnerNameHindi" placeholder="साथी का नाम हिंदी में दर्ज करें">
+                    </div>
 
                 <div class="form-group">
                     <label>Partner Gender:</label>
@@ -744,9 +756,11 @@ header h1 {
 let familyTree = {
     id: 'root',
     name: 'Click to Add',
+    nameHindi: 'जोड़ने के लिए क्लिक करें',  // ADD THIS
     gender: null,
     image: null,
     partner: null,
+    partnerHindi: null,  // ADD THIS
     partnerGender: null,
     partnerImage: null,
     hasPartner: false,
@@ -754,6 +768,8 @@ let familyTree = {
     expanded: true,
     isEmpty: true
 };
+
+let currentLanguage = 'english';  // ADD THIS - Track current language
 
 let currentEditNode = null;
 let nodeIdCounter = 1;
@@ -766,7 +782,9 @@ let isEditMode = false;
 const modal = document.getElementById('editModal');
 const closeBtn = document.querySelector('.close');
 const memberNameInput = document.getElementById('memberName');
+const memberNameHindiInput = document.getElementById('memberNameHindi');  // ADD THIS
 const partnerNameInput = document.getElementById('partnerName');
+const partnerNameHindiInput = document.getElementById('partnerNameHindi');  // ADD THIS
 const memberImageInput = document.getElementById('memberImage');
 const partnerImageInput = document.getElementById('partnerImage');
 const imagePreview = document.getElementById('imagePreview');
@@ -781,6 +799,8 @@ const expandAllBtn = document.getElementById('expandAllBtn');
 const collapseAllBtn = document.getElementById('collapseAllBtn');
 const saveIndicator = document.getElementById('saveIndicator');
 const syncStatus = document.getElementById('syncStatus');
+const englishBtn = document.getElementById('englishBtn');  // ADD THIS
+const hindiBtn = document.getElementById('hindiBtn');  // ADD THIS
 
 // Initialize when Firebase is ready
 window.initializeApp = function() {
@@ -820,6 +840,17 @@ collapseAllBtn.onclick = () => {
 
 memberImageInput.onchange = (e) => handleImagePreview(e, imagePreview);
 partnerImageInput.onchange = (e) => handleImagePreview(e, partnerImagePreview);
+
+// Language toggle buttons
+englishBtn.onclick = () => {
+    currentLanguage = 'english';
+    renderTree();
+};
+
+hindiBtn.onclick = () => {
+    currentLanguage = 'hindi';
+    renderTree();
+};
 
 // Firebase Functions
 async function saveTreeToFirebase() {
@@ -1093,11 +1124,22 @@ function createPersonNode(node, isPartner) {
     
     const name = document.createElement('div');
     name.className = 'node-name';
+
+    // Display name based on current language
     if (isPartner) {
-        name.textContent = node.partner || 'Add Partner';
+        if (currentLanguage === 'hindi' && node.partnerHindi) {
+            name.textContent = node.partnerHindi;
+        } else {
+            name.textContent = node.partner || 'Add Partner';
+        }
     } else {
-        name.textContent = node.name || 'Click to Add';
+        if (currentLanguage === 'hindi' && node.nameHindi) {
+            name.textContent = node.nameHindi;
+        } else {
+            name.textContent = node.name || 'Click to Add';
+        }
     }
+
     nodeDiv.appendChild(name);
     
     nodeDiv.onclick = () => openEditModal(node);
@@ -1113,7 +1155,9 @@ function openEditModal(node) {
     
     currentEditNode = node;
     memberNameInput.value = node.name || '';
+    memberNameHindiInput.value = node.nameHindi || '';  // ADD THIS
     partnerNameInput.value = node.partner || '';
+    partnerNameHindiInput.value = node.partnerHindi || '';  // ADD THIS
     
     const memberGenderRadios = document.querySelectorAll('input[name="memberGender"]');
     memberGenderRadios.forEach(radio => {
@@ -1140,14 +1184,20 @@ function saveNode() {
     if (!currentEditNode) return;
     
     const name = memberNameInput.value.trim();
+    const nameHindi = memberNameHindiInput.value.trim();  // ADD THIS
     const partner = partnerNameInput.value.trim();
+    const partnerHindi = partnerNameHindiInput.value.trim();  // ADD THIS
     
     const memberGender = document.querySelector('input[name="memberGender"]:checked');
     const partnerGender = document.querySelector('input[name="partnerGender"]:checked');
     
     if (name) {
-        currentEditNode.name = name;
-        currentEditNode.isEmpty = false;
+    currentEditNode.name = name;
+    currentEditNode.isEmpty = false;
+    }
+
+    if (nameHindi) {
+        currentEditNode.nameHindi = nameHindi;  // ADD THIS
     }
     
     if (memberGender) {
@@ -1157,13 +1207,16 @@ function saveNode() {
     currentEditNode.hasPartner = hasPartnerCheckbox.checked;
     
     if (hasPartnerCheckbox.checked) {
-        if (partner) {
-            currentEditNode.partner = partner;
-        }
-        if (partnerGender) {
-            currentEditNode.partnerGender = partnerGender.value;
-        }
-    } else {
+    if (partner) {
+        currentEditNode.partner = partner;
+    }
+    if (partnerHindi) {
+        currentEditNode.partnerHindi = partnerHindi;  // ADD THIS
+    }
+    if (partnerGender) {
+        currentEditNode.partnerGender = partnerGender.value;
+    }
+} else {
         currentEditNode.partner = null;
         currentEditNode.partnerGender = null;
         currentEditNode.partnerImage = null;
@@ -1207,18 +1260,20 @@ function addParent() {
     if (!currentEditNode) return;
     
     const newParent = {
-        id: 'node_' + nodeIdCounter++,
-        name: '',
-        gender: null,
-        image: null,
-        partner: null,
-        partnerGender: null,
-        partnerImage: null,
-        hasPartner: false,
-        children: [currentEditNode],
-        expanded: true,
-        isEmpty: true
-    };
+    id: 'node_' + nodeIdCounter++,
+    name: '',
+    nameHindi: '',  // ADD THIS
+    gender: null,
+    image: null,
+    partner: null,
+    partnerHindi: '',  // ADD THIS
+    partnerGender: null,
+    partnerImage: null,
+    hasPartner: false,
+    children: [currentEditNode],
+    expanded: true,
+    isEmpty: true
+};
     
     if (currentEditNode === familyTree) {
         familyTree = newParent;
@@ -1254,9 +1309,11 @@ function addChild() {
     const newChild = {
         id: 'node_' + nodeIdCounter++,
         name: '',
+        nameHindi: '',  // ADD THIS
         gender: null,
         image: null,
         partner: null,
+        partnerHindi: '',  // ADD THIS
         partnerGender: null,
         partnerImage: null,
         hasPartner: false,

@@ -13,7 +13,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ce5a5a 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -113,7 +113,7 @@ header h1 {
 }
 
 .tree-container {
-    background: white;
+    background: #FFFDD0; 
     border-radius: 20px;
     padding: 40px 20px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -1027,9 +1027,10 @@ function addHorizontalConnector(generationDiv) {
     const firstRect = firstUnit.getBoundingClientRect();
     const lastRect = lastUnit.getBoundingClientRect();
     
-    const leftPos = firstRect.left - parentRect.left + (firstRect.width / 2);
-    const rightPos = lastRect.left - parentRect.left + (lastRect.width / 2);
-    const width = rightPos - leftPos;
+    // Calculate positions based on the vertical branches, not the family units
+const leftPos = firstRect.left - parentRect.left + (firstRect.width / 2) - 32; // Shift left to match vertical branch
+const rightPos = lastRect.left - parentRect.left + (lastRect.width / 2);
+const width = rightPos - leftPos;
     
     // Create SVG for horizontal branch
     const branchSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

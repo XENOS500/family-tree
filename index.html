@@ -157,7 +157,9 @@ header h1 {
 }
 
 .tree {
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 20px;
     min-width: 100%;
 }
@@ -887,7 +889,7 @@ function renderNode(node, parentElement, level) {
     
     // If this node has a partner, shift line to connect to main person only (not couple center)
     if (node.hasPartner) {
-        verticalLineTop.style.left = 'calc(50% - 31px)'; // Connect to child, not couple center
+        verticalLineTop.style.left = 'calc(50% - 32px)'; // Connect to child, not couple center
     }
     
     familyUnit.appendChild(verticalLineTop);
@@ -955,19 +957,19 @@ function addHorizontalConnector(generationDiv) {
     const firstUnit = familyUnits[0];
     const lastUnit = familyUnits[familyUnits.length - 1];
     
-    // Get the couple-container (where the actual nodes are) instead of family-unit
-    const firstCouple = firstUnit.querySelector('.couple-container');
-    const lastCouple = lastUnit.querySelector('.couple-container');
+    // Get vertical lines from each unit to determine connection points
+    const firstVerticalLine = firstUnit.querySelector('.vertical-line-top');
+    const lastVerticalLine = lastUnit.querySelector('.vertical-line-top');
     
-    if (!firstCouple || !lastCouple) return;
+    if (!firstVerticalLine || !lastVerticalLine) return;
     
     const parentRect = generationDiv.getBoundingClientRect();
-    const firstRect = firstCouple.getBoundingClientRect();
-    const lastRect = lastCouple.getBoundingClientRect();
+    const firstLineRect = firstVerticalLine.getBoundingClientRect();
+    const lastLineRect = lastVerticalLine.getBoundingClientRect();
     
-    // Calculate center of each couple-container
-    const leftPos = firstRect.left - parentRect.left + (firstRect.width / 2);
-    const rightPos = lastRect.left - parentRect.left + (lastRect.width / 2);
+    // Get the center position of each vertical line
+    const leftPos = firstLineRect.left - parentRect.left + 1; // +1 for line width center
+    const rightPos = lastLineRect.left - parentRect.left + 1;
     const width = rightPos - leftPos;
     
     const horizontalLine = document.createElement('div');

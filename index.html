@@ -251,20 +251,52 @@ header h1 {
 }
 
 .node-name {
-    margin-top: 6px;
-    font-size: 0.8em;
-    font-weight: 600;
-    color: #333;
+    margin-top: 8px;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: #1a1a1a;
     text-align: center;
-    max-width: 70px;
+    max-width: 80px;
     word-wrap: break-word;
-    line-height: 1.1;
+    line-height: 1.2;
+    background: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 2.5px solid #999;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Male names get blue border */
+.node.male .node-name {
+    border-color: #4A90E2;
+    box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
+}
+
+/* Female names get pink border */
+.node.female .node-name {
+    border-color: #FF69B4;
+    box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3);
 }
 
 .connector {
     width: 8px;
     height: 2px;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+/* ADD THESE NEW CLASSES BELOW */
+.tree-branch-vertical {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.tree-branch-horizontal {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
 }
 
 .vertical-line {
@@ -274,7 +306,8 @@ header h1 {
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
-    border-radius: 2px; 
+    border-radius: 2px;
+    display: none;  /* ADD THIS */
 }
 
 .vertical-line-top {
@@ -293,6 +326,7 @@ header h1 {
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
     top: -45px;
     z-index: 0;
+    display: none;  /* ADD THIS */
 }
 
 .expand-btn {
@@ -537,9 +571,10 @@ header h1 {
     }
     
     .node-name {
-        font-size: 0.75em;
-        max-width: 60px;
-    }
+    font-size: 0.75em;
+    max-width: 70px;
+    padding: 5px 8px;
+}
     
     .generation {
         gap: 20px;
@@ -885,15 +920,30 @@ function renderNode(node, parentElement, level) {
     familyUnit.style.position = 'relative';
     
     if (level > 0) {
-    const verticalLineTop = document.createElement('div');
-    verticalLineTop.className = 'vertical-line vertical-line-top';
+    // Create SVG tree branch from parent to child
+    const branchSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    branchSvg.classList.add('tree-branch-vertical');
+    branchSvg.style.bottom = 'calc(100%)';
+    branchSvg.style.height = '45px';
+    branchSvg.style.width = '40px';
+    branchSvg.setAttribute('viewBox', '0 0 40 45');
     
-    // If this node has a partner, shift line to connect to main person only (not couple center)
+    // Adjust position if node has partner
     if (node.hasPartner) {
-        verticalLineTop.style.left = 'calc(50% - 32px)'; // Connect to child, not couple center
+        branchSvg.style.left = 'calc(50% - 32px)';
     }
     
-    familyUnit.appendChild(verticalLineTop);
+    // Create curved path (tree branch)
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = 'M 20,0 Q 20,15 20,22.5 Q 20,35 20,45';
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', '#8B4513');
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    
+    branchSvg.appendChild(path);
+    familyUnit.appendChild(branchSvg);
 }
     
     const coupleContainer = document.createElement('div');
@@ -914,9 +964,24 @@ function renderNode(node, parentElement, level) {
     familyUnit.appendChild(coupleContainer);
     
     if (node.children && node.children.length > 0) {
-        const verticalLineBottom = document.createElement('div');
-        verticalLineBottom.className = 'vertical-line vertical-line-bottom';
-        familyUnit.appendChild(verticalLineBottom);
+    // Create SVG branch going down to children
+    const branchSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    branchSvg.classList.add('tree-branch-vertical');
+    branchSvg.style.top = 'calc(100%)';
+    branchSvg.style.height = '45px';
+    branchSvg.style.width = '40px';
+    branchSvg.setAttribute('viewBox', '0 0 40 45');
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = 'M 20,0 Q 20,15 20,22.5 Q 20,35 20,45';
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', '#8B4513');
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    
+    branchSvg.appendChild(path);
+    familyUnit.appendChild(branchSvg);
         
         const expandBtn = document.createElement('button');
         expandBtn.className = 'expand-btn';
@@ -958,27 +1023,36 @@ function addHorizontalConnector(generationDiv) {
     const firstUnit = familyUnits[0];
     const lastUnit = familyUnits[familyUnits.length - 1];
     
-    // Get vertical lines from each unit to determine connection points
-    const firstVerticalLine = firstUnit.querySelector('.vertical-line-top');
-    const lastVerticalLine = lastUnit.querySelector('.vertical-line-top');
-    
-    if (!firstVerticalLine || !lastVerticalLine) return;
-    
     const parentRect = generationDiv.getBoundingClientRect();
-    const firstLineRect = firstVerticalLine.getBoundingClientRect();
-    const lastLineRect = lastVerticalLine.getBoundingClientRect();
+    const firstRect = firstUnit.getBoundingClientRect();
+    const lastRect = lastUnit.getBoundingClientRect();
     
-    // Get the center position of each vertical line
-    const leftPos = firstLineRect.left - parentRect.left + 1; // +1 for line width center
-    const rightPos = lastLineRect.left - parentRect.left + 1;
+    const leftPos = firstRect.left - parentRect.left + (firstRect.width / 2);
+    const rightPos = lastRect.left - parentRect.left + (lastRect.width / 2);
     const width = rightPos - leftPos;
     
-    const horizontalLine = document.createElement('div');
-    horizontalLine.className = 'horizontal-connector';
-    horizontalLine.style.left = leftPos + 'px';
-    horizontalLine.style.width = width + 'px';
+    // Create SVG for horizontal branch
+    const branchSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    branchSvg.classList.add('tree-branch-horizontal');
+    branchSvg.style.left = leftPos + 'px';
+    branchSvg.style.width = width + 'px';
+    branchSvg.style.height = '20px';
+    branchSvg.style.top = '-50px';
+    branchSvg.setAttribute('viewBox', `0 0 ${width} 20`);
     
-    generationDiv.appendChild(horizontalLine);
+    // Create wavy branch path
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midPoint = width / 2;
+    const d = `M 0,10 Q ${midPoint * 0.3},8 ${midPoint * 0.5},10 Q ${midPoint * 0.7},12 ${midPoint},10 Q ${midPoint * 1.3},8 ${midPoint * 1.5},10 Q ${midPoint * 1.7},12 ${width},10`;
+    
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', '#8B4513');
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    
+    branchSvg.appendChild(path);
+    generationDiv.appendChild(branchSvg);
 }
 
 function createPersonNode(node, isPartner) {
@@ -1277,4 +1351,5 @@ function handleImagePreview(event, previewElement) {
 }
     </script>
 </body>
+</html>
 </html>

@@ -617,7 +617,7 @@ header h1 {
     
     <div class="container">
         <header>
-            <h1 id="mainHeading">Pareek Family Tree</h1>            <p class="subtitle">Tracing the roots of family-        by Ayush Hemant Pareek</p>
+            <h1 id="mainHeading">Pareek Family Tree</h1>            <p class="subtitle" id="subtitle">Tracing the roots of family - by Ayush Hemant Pareek</p>
             <div class="sync-status" id="syncStatus">🔄 Connecting to cloud...</div>
         </header>
 
@@ -831,15 +831,18 @@ partnerImageInput.onchange = (e) => handleImagePreview(e, partnerImagePreview);
 
 // Language toggle buttons
 // Language toggle buttons
+// Language toggle buttons
 englishBtn.onclick = () => {
     currentLanguage = 'english';
     document.getElementById('mainHeading').textContent = 'Pareek Family Tree';
+    document.getElementById('subtitle').textContent = 'Tracing the roots of family - by Ayush Hemant Pareek';
     renderTree();
 };
 
 hindiBtn.onclick = () => {
     currentLanguage = 'hindi';
     document.getElementById('mainHeading').textContent = 'पारीक परिवार वंश वृक्ष';
+    document.getElementById('subtitle').textContent = 'परिवार की जड़ों का पता लगाना - आयुष हेमंत परीक द्वारा';
     renderTree();
 };
 

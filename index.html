@@ -70,7 +70,7 @@ header h1 {
     padding: 12px 24px;
     font-size: 1.1em;
     font-weight: 600;
-    border: none;
+    border: 2px solid transparent;  /* Changed from "none" */
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -80,6 +80,7 @@ header h1 {
 .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.2);  /* ADD THIS - subtle white background on hover */
 }
 
 .btn-reset {
@@ -87,24 +88,17 @@ header h1 {
     color: white;
 }
 
-.btn-expand {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
-}
-
-.btn-collapse {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    color: white;
-}
 
 .btn-add {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    background: transparent;
     color: white;
+    border: 2px solid white;
 }
 
 .btn-save {
-    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    background: transparent;
     color: white;
+    border: 2px solid white;
 }
 
 .btn-delete {
@@ -629,8 +623,6 @@ header h1 {
         </header>
 
         <div class="controls">
-            <button id="expandAllBtn" class="btn btn-expand">Expand All</button>
-            <button id="collapseAllBtn" class="btn btn-collapse">Collapse All</button>
             <button id="englishBtn" class="btn btn-save">English</button>
             <button id="hindiBtn" class="btn btn-add">हिंदी</button>
          </div>
@@ -804,8 +796,6 @@ const saveBtn = document.getElementById('saveBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const addParentBtn = document.getElementById('addParentBtn');
 const addChildBtn = document.getElementById('addChildBtn');
-const expandAllBtn = document.getElementById('expandAllBtn');
-const collapseAllBtn = document.getElementById('collapseAllBtn');
 const saveIndicator = document.getElementById('saveIndicator');
 const syncStatus = document.getElementById('syncStatus');
 const englishBtn = document.getElementById('englishBtn');  // ADD THIS
@@ -836,16 +826,6 @@ saveBtn.onclick = saveNode;
 deleteBtn.onclick = deleteNode;
 addParentBtn.onclick = addParent;
 addChildBtn.onclick = addChild;
-expandAllBtn.onclick = () => {
-    if (checkEditPassword()) {
-        expandCollapseAll(true);
-    }
-};
-collapseAllBtn.onclick = () => {
-    if (checkEditPassword()) {
-        expandCollapseAll(false);
-    }
-};
 
 memberImageInput.onchange = (e) => handleImagePreview(e, imagePreview);
 partnerImageInput.onchange = (e) => handleImagePreview(e, partnerImagePreview);

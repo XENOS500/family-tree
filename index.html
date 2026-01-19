@@ -97,13 +97,13 @@ header h1 {
 
 .btn-save {
     background: transparent;
-    color: rgb(8, 8, 8);
+    color: rgb(3, 3, 3);
     border: 2px solid white;
 }
 
 .btn-delete {
     background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
-    color: rgb(8, 8, 8);
+    color: rgb(5, 5, 5);
 }
 
 .tree-container {
@@ -617,8 +617,7 @@ header h1 {
     
     <div class="container">
         <header>
-            <h1>Pareek Family Tree</h1>
-            <p class="subtitle">Tracing the roots of family-        by Ayush Hemant Pareek</p>
+            <h1 id="mainHeading">Pareek Family Tree</h1>            <p class="subtitle">Tracing the roots of family-        by Ayush Hemant Pareek</p>
             <div class="sync-status" id="syncStatus">🔄 Connecting to cloud...</div>
         </header>
 
@@ -831,13 +830,16 @@ memberImageInput.onchange = (e) => handleImagePreview(e, imagePreview);
 partnerImageInput.onchange = (e) => handleImagePreview(e, partnerImagePreview);
 
 // Language toggle buttons
+// Language toggle buttons
 englishBtn.onclick = () => {
     currentLanguage = 'english';
+    document.getElementById('mainHeading').textContent = 'Pareek Family Tree';
     renderTree();
 };
 
 hindiBtn.onclick = () => {
     currentLanguage = 'hindi';
+    document.getElementById('mainHeading').textContent = 'पारीक परिवार वंश वृक्ष';
     renderTree();
 };
 

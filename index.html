@@ -716,46 +716,42 @@ header h1 {
     </div>
 
     <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    <!-- Your existing Firebase initialization -->
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';  // ADD THIS LINE
 
-        // TODO: Replace with your Firebase config
-        // Get this from Firebase Console > Project Settings > Your apps > SDK setup and configuration
-        const firebaseConfig = {
-  apiKey: "AIzaSyAD-oAt1sp1-z1CyaLkjnx98kxToGX5yOc",
-  authDomain: "family-tree-53117.firebaseapp.com",
-  databaseURL: "https://family-tree-53117-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "family-tree-53117",
-  storageBucket: "family-tree-53117.firebasestorage.app",
-  messagingSenderId: "344307172282",
-  appId: "1:344307172282:web:34686e24f9a633bfb19383"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyAD-oAt1sp1-z1CyaLkjnx98kxToGX5yOc",
+        authDomain: "family-tree-53117.firebaseapp.com",
+        databaseURL: "https://family-tree-53117-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "family-tree-53117",
+        storageBucket: "family-tree-53117.firebasestorage.app",
+        messagingSenderId: "344307172282",
+        appId: "1:344307172282:web:34686e24f9a633bfb19383"
+    };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const treeRef = ref(database, 'familyTree');
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const treeRef = ref(database, 'familyTree');
+    const analytics = getAnalytics(app);  // ADD THIS LINE
 
-        // Make database globally accessible
-        window.firebaseDb = database;
-        window.treeRef = treeRef;
-        window.firebaseSet = set;
-        window.firebaseGet = get;
-        window.firebaseOnValue = onValue;
-        
-        // Signal that Firebase is ready
-        window.firebaseReady = true;
-        if (window.initializeApp) {
-            window.initializeApp();
-        }
-    </script>
-    <script type="module">
-        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
-        
-        // Initialize Analytics - that's it!
-        const analytics = getAnalytics(app);
-    </script>
+    // Make database globally accessible
+    window.firebaseDb = database;
+    window.treeRef = treeRef;
+    window.firebaseSet = set;
+    window.firebaseGet = get;
+    window.firebaseOnValue = onValue;
+    
+    // Signal that Firebase is ready
+    window.firebaseReady = true;
+    if (window.initializeApp) {
+        window.initializeApp();
+    }
+</script>
+    
 
     <script>
 // Family Tree Data Structure
